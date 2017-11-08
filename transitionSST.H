@@ -38,9 +38,10 @@ SourceFiles
 #ifndef transitionSST_H
 #define transitionSST_H
 
-#include "transitionSSTBase.H"
-#include "RASModel.H"
-#include "eddyViscosity.H"
+// #include "kOmegaSSTBase.H"
+#include "kOmegaSST.H"
+// #include "RASModel.H"
+// #include "eddyViscosity.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,12 +57,45 @@ namespace RASModels
 template<class BasicTurbulenceModel>
 class transitionSST
 :
-    public Foam::transitionSST
-    <
-        eddyViscosity<RASModel<BasicTurbulenceModel>>,
-        BasicTurbulenceModel
-    >
+    public kOmegaSST<BasicTurbulenceModel>
 {
+    // Disallow default bitwise copy construct and assignment
+        transitionSST(const transitionSST&);
+        void operator=(const transitionSST&);
+
+protected:
+    // volScalarField k_;
+    // volScalarField omega_;
+    volScalarField ReThetatTilda_;
+    volScalarField gamma_;
+    // volScalarField::Internal gammaEff_;
+
+    tmp<volScalarField> Pgamma() const;
+    tmp<volScalarField> Fonset1() const;
+    tmp<volScalarField> Fonset2() const;
+    tmp<volScalarField> Fonset3() const;
+    tmp<volScalarField> Fonset() const;
+    tmp<volScalarField> ReV() const;
+    tmp<volScalarField> Rt() const;
+    tmp<volScalarField> Flength() const;
+    tmp<volScalarField> ReThetac() const;
+    tmp<volScalarField> Fsublayer() const;
+    tmp<volScalarField> ReOmega() const;
+    tmp<volScalarField> gammaSep() const;
+    tmp<volScalarField> Freattach() const;
+    tmp<volScalarField> gammaEff() const;
+    tmp<volScalarField> Fturb() const;
+
+    tmp<volScalarField> PReThetatTilda() const;
+    tmp<volScalarField> Fthetat() const;
+    tmp<volScalarField> ReThetat() const;
+    scalar F(scalar lambda, scalar Tu, scalar dUds) const;
+    tmp<volScalarField> delta() const;
+    tmp<volScalarField> Fwake() const;
+
+    tmp<volScalarField> F1(const volScalarField& CDkOmega) const;
+    tmp<volScalarField> F3() const;
+    tmp<volScalarField> Ry() const;
 
 public:
 
@@ -69,10 +103,8 @@ public:
     typedef typename BasicTurbulenceModel::rhoField rhoField;
     typedef typename BasicTurbulenceModel::transportModel transportModel;
 
-
     //- Runtime type information
     TypeName("transitionSST");
-
 
     // Constructors
 
@@ -93,6 +125,32 @@ public:
     //- Destructor
     virtual ~transitionSST()
     {}
+
+    tmp<volScalarField> DgammaEff() const
+    {
+        return this->mu() + this->mut();
+    }
+
+    tmp<volScalarField> DReThetatTildaEff() const
+    {
+        return 2.0*(this->mu() + this->mut());
+    }
+
+    virtual tmp<volScalarField> Pk(const volScalarField G) const;
+    virtual tmp<volScalarField> epsilonByk (const volScalarField & F1, const volScalarField& F2) const;
+    virtual void correctGammaReThetatTilda();
+    
+    const volScalarField& gamma() const
+    {
+        return gamma_;
+    }
+
+    const volScalarField& ReThetatTilda() const
+    {
+        return ReThetatTilda_;
+    }
+    
+    virtual void correct();
 };
 
 
